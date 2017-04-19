@@ -3,7 +3,6 @@ package main
 import (
 	"time"
 
-	"fmt"
 	api "github.com/hashicorp/consul/api"
 	observer "github.com/imkira/go-observer"
 )
