@@ -572,7 +572,7 @@ func (c *ConsulConnection) dereigsterConsulService(action Action) {
 
 	config := api.DefaultConfig()
 	config.Address = nodeAddress + ":" + port
-	config.Token = c.region.Config.ConsulACLToken
+	config.Token = c.region.aclToken
 
 	client, err := api.NewClient(config)
 	if err != nil {
@@ -626,7 +626,7 @@ func (c *ConsulConnection) dereigsterConsulServiceCheck(action Action) {
 
 	config := api.DefaultConfig()
 	config.Address = nodeAddress + ":" + port
-	config.Token = c.region.Config.ConsulACLToken
+	config.Token = c.region.aclToken
 
 	client, err := api.NewClient(config)
 	if err != nil {

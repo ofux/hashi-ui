@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"strconv"
 	"syscall"
@@ -13,11 +14,14 @@ var (
 	flagConsulReadOnly = flag.Bool("consul-read-only", false, "Whether Hashi-UI should be allowed to modify Consul state. "+
 		"Overrides the CONSUL_READ_ONLY environment variable if set. "+flagDefault(strconv.FormatBool(defaultConfig.ConsulEnable)))
 
-	flagConsulAddress = flag.String("consul-address", "", "The address of the Consul server. "+
+	flagConsulAddress = flag.String("consul-address", "", "The address of the Consul agent. "+
 		"Overrides the CONSUL_ADDR environment variable if set. "+flagDefault(defaultConfig.ConsulAddress))
 
-	flagConsulACLToken = flag.String("consul.acl-token", "", "A ACL token to use when talking to Consul. "+
-		"Overrides the CONSUL_ACL_TOKEN environment variable if set. "+flagDefault(defaultConfig.ConsulACLToken))
+	flagConsulDatacenter = flag.String("consul-datacenter", "", "Datacenter where Hashi-UI is installed. "+
+		"Overrides the CONSUL_DATACENTER environment variable if set. "+flagDefault(defaultConfig.ConsulDatacenter))
+
+	flagConsulACLTokens = flag.String("consul-acl-tokens", "", "ACL tokens for each datacenter. "+
+		"Overrides the CONSUL_ACL_TOKENS environment variable if set. "+flagDefault(""))
 )
 
 // ParseConsulEnvConfig ...
@@ -37,9 +41,18 @@ func ParseConsulEnvConfig(c *Config) {
 		c.ConsulAddress = consulAddress
 	}
 
-	aclToken, ok := syscall.Getenv("CONSUL_ACL_TOKEN")
+	datacenter, ok := syscall.Getenv("CONSUL_DATACENTER")
 	if ok {
-		c.ConsulACLToken = aclToken
+		c.ConsulDatacenter = datacenter
+	}
+
+	aclTokens, ok := syscall.Getenv("CONSUL_ACL_TOKENS")
+	if ok {
+		var aclTokensMap map[string]string
+		if err := json.Unmarshal([]byte(aclTokens), &aclTokensMap); err != nil {
+			logger.Fatalf("Could not parse CONSUL_ACL_TOKENS environment variable: %s", err)
+		}
+		c.ConsulACLTokens = aclTokensMap
 	}
 }
 
@@ -57,7 +70,15 @@ func ParseConsulFlagConfig(c *Config) {
 		c.ConsulAddress = *flagConsulAddress
 	}
 
-	if *flagConsulACLToken != "" {
-		c.ConsulACLToken = *flagConsulACLToken
+	if *flagConsulDatacenter != "" {
+		c.ConsulDatacenter = *flagConsulDatacenter
+	}
+
+	if *flagConsulACLTokens != "" {
+		var aclTokensMap map[string]string
+		if err := json.Unmarshal([]byte(*flagConsulACLTokens), &aclTokensMap); err != nil {
+			logger.Fatalf("Could not parse consul-acl-tokens flag: %s", err)
+		}
+		c.ConsulACLTokens = aclTokensMap
 	}
 }

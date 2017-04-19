@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"fmt"
 	api "github.com/hashicorp/consul/api"
 	observer "github.com/imkira/go-observer"
 )
@@ -39,6 +40,7 @@ type ConsulRegion struct {
 	regions           []string
 	services          *ConsulInternalServices
 	nodes             *ConsulInternalNodes
+	aclToken          string
 }
 
 // ConsulInternalService ...
@@ -71,13 +73,13 @@ func CreateConsulRegionClient(c *Config, region string) (*api.Client, error) {
 	config.Address = c.ConsulAddress
 	config.WaitTime = waitTime
 	config.Datacenter = region
-	config.Token = c.ConsulACLToken
+	config.Token = c.ConsulACLTokens[region]
 
 	return api.NewClient(config)
 }
 
 // NewConsulRegion configures the Consul API client and initializes the internal state.
-func NewConsulRegion(c *Config, client *api.Client, channels *ConsulRegionBroadcastChannels) (*ConsulRegion, error) {
+func NewConsulRegion(c *Config, region string, client *api.Client, channels *ConsulRegionBroadcastChannels) (*ConsulRegion, error) {
 	return &ConsulRegion{
 		Config:            c,
 		Client:            client,
@@ -85,6 +87,7 @@ func NewConsulRegion(c *Config, client *api.Client, channels *ConsulRegionBroadc
 		regions:           make([]string, 0),
 		services:          &ConsulInternalServices{},
 		nodes:             &ConsulInternalNodes{},
+		aclToken:          c.ConsulACLTokens[region],
 	}, nil
 }
 
@@ -97,7 +100,7 @@ func (c *ConsulRegion) StartWatchers() {
 // watchServices ...
 func (c *ConsulRegion) watchServices() {
 	q := &api.QueryOptions{WaitIndex: 0}
-	q.Token = c.Config.ConsulACLToken
+	q.Token = c.aclToken
 
 	raw := c.Client.Raw()
 
@@ -132,7 +135,7 @@ func (c *ConsulRegion) watchServices() {
 // watchNodes ...
 func (c *ConsulRegion) watchNodes() {
 	q := &api.QueryOptions{WaitIndex: 0}
-	q.Token = c.Config.ConsulACLToken
+	q.Token = c.aclToken
 
 	raw := c.Client.Raw()
 

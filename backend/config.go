@@ -41,10 +41,11 @@ type Config struct {
 	NomadSkipVerify  bool
 	NomadHideEnvData bool
 
-	ConsulEnable   bool
-	ConsulReadOnly bool
-	ConsulAddress  string
-	ConsulACLToken string
+	ConsulEnable     bool
+	ConsulReadOnly   bool
+	ConsulAddress    string
+	ConsulDatacenter string
+	ConsulACLTokens  map[string]string
 }
 
 // DefaultConfig is the basic out-of-the-box configuration for hashi-ui
@@ -59,8 +60,10 @@ func DefaultConfig() *Config {
 		NomadAddress:     "http://127.0.0.1:4646",
 		NomadHideEnvData: false,
 
-		ConsulReadOnly: false,
-		ConsulAddress:  "127.0.0.1:8500",
+		ConsulReadOnly:   false,
+		ConsulAddress:    "127.0.0.1:8500",
+		ConsulDatacenter: "dc1",
+		ConsulACLTokens:  make(map[string]string),
 	}
 }
 

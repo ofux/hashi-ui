@@ -7,7 +7,7 @@ import (
 // InitializeConsul ...
 func InitializeConsul(cfg *Config) (*ConsulHub, bool) {
 
-	consulClient, err := CreateConsulRegionClient(cfg, "")
+	consulClient, err := CreateConsulRegionClient(cfg, cfg.ConsulDatacenter)
 	if err != nil {
 		logger.Errorf("Could not create Consul API Client: %s", err)
 		return nil, false
@@ -38,7 +38,7 @@ func InitializeConsul(cfg *Config) (*ConsulHub, bool) {
 		}
 
 		logger.Infof("  -> Connecting to Consul")
-		nomad, nomadErr := NewConsulRegion(cfg, regionClient, channels)
+		nomad, nomadErr := NewConsulRegion(cfg, region, regionClient, channels)
 		if nomadErr != nil {
 			logger.Errorf("    -> Could not create Consul client: %s", nomadErr)
 			return nil, false
